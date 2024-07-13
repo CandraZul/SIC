@@ -1,0 +1,170 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Dashboard</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: 'Arial', sans-serif;
+            background-color: #f7f9fc;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            width: 90%;
+            max-width: 800px;
+            margin: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #fff, #f0f0f0);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .metrics {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .metric-box {
+            width: 100px;
+            height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin: 10px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #f6f6f6, #e9e9e9);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+        .metric-box:hover {
+            transform: scale(1.05);
+        }
+        .metric-box div:first-child {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+        .metric-box div:last-child {
+            font-size: 14px;
+            color: #777;
+            text-align: center;
+        }
+        .advice-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        .advice-section input, .advice-section textarea, .advice-section button {
+            width: calc(100% - 20px);
+            margin: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+        .advice-section input:focus, .advice-section textarea:focus {
+            outline: none;
+            border-color: #8B0000;
+        }
+        .advice-section textarea {
+            min-height: 100px;
+        }
+        .advice-section button {
+            background-color: #8B0000;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+        .advice-section button:hover {
+            background-color: #a80000;
+            transform: scale(1.05);
+        }
+        .result textarea {
+            width: calc(100% - 20px);
+            margin: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+            font-size: 16px;
+            resize: none;
+        }
+        .result textarea:focus {
+            outline: none;
+            border-color: #8B0000;
+        }
+        @media (max-width: 600px) {
+            .metric-box {
+                width: 80px;
+                height: 80px;
+            }
+            .metric-box div:first-child {
+                font-size: 20px;
+            }
+            .metric-box div:last-child {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="metrics">
+        <div class="metric-box">
+            <div id="temp">37</div>
+            <div>Suhu</div>
+        </div>
+        <div class="metric-box">
+            <div id="heartRate">90</div>
+            <div>Detak Jantung</div>
+        </div>
+        <div class="metric-box">
+            <div id="oxygen">80</div>
+            <div>Saturasi<br>Oksigen</div>
+        </div>
+    </div>
+    <div class="advice-section">
+        <p id="advice"></p>
+        <textarea id="symptomsInput" rows="5" placeholder="Masukkan gejala yang dialami"></textarea>
+        <button onclick="giveAdvice()">Berikan saran</button>
+    </div>
+    <div class="advice-section">
+        <textarea id="resultOutput" rows="5" readonly placeholder="Hasil akan ditampilkan di sini"></textarea>
+    </div>
+</div>
+
+<script>
+    function updateAdvice() {
+        const temp = document.getElementById('temp').innerText;
+        const heartRate = document.getElementById('heartRate').innerText;
+        const oxygen = document.getElementById('oxygen').innerText;
+        const adviceText = `Saran untuk pasien dengan detak jantung: ${heartRate} bpm, saturasi oksigen: ${oxygen}%, dan suhu: ${temp}°C`;
+        document.getElementById('advice').innerText = adviceText;
+    }
+
+    function giveAdvice() {
+        const symptoms = document.getElementById('symptomsInput').value;
+        // Logic for processing symptoms and generating advice
+        const advice = `Gejala yang dilaporkan: ${symptoms}. Saran: ...`; // Update with actual advice logic
+        document.getElementById('resultOutput').value = advice;
+    }
+
+    // Initial advice update
+    updateAdvice();
+</script>
+
+</body>
+</html>
