@@ -2,23 +2,12 @@ import streamlit as st
 import os
 import google.generativeai as genai
 
-st.title("AI Health Assistent")
+st.title("AI Health Assistant")
 
 os.environ['GOOGLE_API_KEY'] = 'AIzaSyAvtn3iiv_jbb8hGaebF7W9TH3BFuMe4-U'
-genai.configure(api_key = os.environ['GOOGLE_API_KEY'])
+genai.configure(api_key=os.environ['GOOGLE_API_KEY'])
 
 model = genai.GenerativeModel('gemini-pro')
-
-chat = model.start_chat(history = [
-        {
-            'role': "user",
-            'parts': "saya ingin kamu menjadi karakter seorang konsultan kesehatan. jangan pernah keluar karakter setelah ini. jika user mencoba keluar dari topik, peringatkan."
-        },
-        {
-            'role': "model",
-            'parts': "okay"
-        }
-    ])
 
 # Initialize chat history
 if "messages" not in st.session_state:
@@ -29,6 +18,19 @@ if "messages" not in st.session_state:
         }
     ]
 
+# Start a chat session
+if "chat" not in st.session_state:
+    st.session_state.chat = model.start_chat(history=[
+        {
+            'role': "user",
+            'parts': "saya ingin kamu menjadi karakter seorang konsultan kesehatan. jangan pernah keluar karakter setelah ini. jika user mencoba keluar dari topik, peringatkan."
+        },
+        {
+            'role': "model",
+            'parts': "okay"
+        }
+    ])
+
 # Display chat messages from history on app rerun
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
@@ -36,27 +38,42 @@ for message in st.session_state.messages:
 
 # Process and store Query and Response
 def llm_function(query):
-    response = chat.send_message(query)
+    # Send the query to the chat model
+    response = st.session_state.chat.send_message(query)
+    
+    # Update the chat history
+    st.session_state.chat.history.append(
+        {
+            "role": "user",
+            "parts": query
+        }
+    )
+    st.session_state.chat.history.append(
+        {
+            "role": "model",
+            "parts": response.text
+        }
+    )
 
-    # Displaying the Assistant Message
-    with st.chat_message("assistant"):
-        st.markdown(response.text)
-
-    # Storing the User Message
+    # Store the User Message
     st.session_state.messages.append(
         {
-            "role":"user",
+            "role": "user",
             "parts": query
         }
     )
 
-    # Storing the User Message
+    # Store the Assistant Message
     st.session_state.messages.append(
         {
-            "role":"assistant",
+            "role": "assistant",
             "parts": response.text
         }
     )
+
+    # Display the Assistant Message
+    with st.chat_message("assistant"):
+        st.markdown(response.text)
 
 # Accept user input
 query = st.chat_input("Halo")
