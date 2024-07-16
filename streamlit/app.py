@@ -1,7 +1,7 @@
 import streamlit as st
 import random
 import numpy as np
-from tensorflow.keras.models import load_model
+from keras.models import load_model
 from sklearn.preprocessing import StandardScaler
 import google.generativeai as genai
 import pickle
