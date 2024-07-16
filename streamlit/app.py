@@ -1,9 +1,10 @@
 import streamlit as st
 import random
 import numpy as np
-import joblib
+from tensorflow.keras.models import load_model
 from sklearn.preprocessing import StandardScaler
 import google.generativeai as genai
+import pickle
 
 def app():
     GOOGLE_API_KEY='AIzaSyAvtn3iiv_jbb8hGaebF7W9TH3BFuMe4-U'
@@ -11,20 +12,16 @@ def app():
 
     st.set_page_config(page_title='Health Monitoring', layout='wide', page_icon=':hospital:')
 
-    model_filename = 'health_status_model.pkl'
-    loaded_model = joblib.load(model_filename)
+    model_filename = 'D:/Dokumen/Mandiri/sic/gemini/health_status_model.h5'
+    loaded_model = load_model(model_filename)
+    with open('D:/Dokumen/Mandiri/sic/gemini/scaler.pkl', 'rb') as f:
+        scaler = pickle.load(f)
 
-    # Function to preprocess input data
-    def preprocess_input(data):
-        scaler = StandardScaler()
-        scaled_data = scaler.fit_transform(data)
-        return scaled_data
-
-    # Function to predict health status
     def predict_health_status(data):
-        preprocessed_data = preprocess_input(data)
-        predictions = loaded_model.predict(preprocessed_data)
-        return predictions
+        scaled_data = scaler.transform(data)
+        predictions = loaded_model.predict(scaled_data)
+        pred_class = np.argmax(predictions, axis=1)
+        return pred_class[0]
 
     # Function to generate random metrics
     def generate_random_metrics():
@@ -53,9 +50,9 @@ def app():
         # Tombol untuk memperbarui nilai metrik
         if st.button('Perbarui Metrik'):
             bpm, spo2, temperature, _ = generate_random_metrics()
-            input_data = np.array([[bpm, temperature, spo2]])
+            input_data = np.array([[bpm, temperature, spo2]]).reshape(1, -1)
             prediction = predict_health_status(input_data)
-            health_status = "Sehat" if prediction == 0 else ("Sakit Ringan" if prediction == 1 else "Sakit Parah")
+            health_status = "Sehat" if prediction == 0 else "Sakit Ringan" if prediction == 1 else "Sakit Parah"
         else:
             bpm, spo2, temperature, health_status = generate_random_metrics()
 
