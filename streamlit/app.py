@@ -13,7 +13,7 @@ def app():
     st.set_page_config(page_title='Health Monitoring', layout='wide', page_icon=':hospital:')
 
     model_filename = 'D:/Dokumen/Mandiri/sic/gemini/health_status_model.h5'
-    loaded_model = load_model(model_filename)
+    loaded_model = load_model(model_filename, compile=False)
     with open('D:/Dokumen/Mandiri/sic/gemini/scaler.pkl', 'rb') as f:
         scaler = pickle.load(f)
 
