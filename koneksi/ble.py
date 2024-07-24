@@ -1,17 +1,21 @@
 import streamlit as st
 import asyncio
 from bleak import BleakClient, BleakScanner
+import struct
 
 # Define BLE Device Specs
 DEVICE_NAME = 'ESP32'
 BLE_SERVICE = "19b10000-e8f2-537e-4f6c-d104768a1214"
-LED_CHARACTERISTIC = '19b10002-e8f2-537e-4f6c-d104768a1214'
-SENSOR_CHARACTERISTIC = '19b10001-e8f2-537e-4f6c-d104768a1214'
+BPM_CHARACTERISTIC = '19b10001-e8f2-537e-4f6c-d104768a1214'
+SPO2_CHARACTERISTIC = '19b10002-e8f2-537e-4f6c-d104768a1214'
+TEMP_CHARACTERISTIC = '19b10003-e8f2-537e-4f6c-d104768a1214'
 
 # Streamlit UI
-st.title("ESP32 Bluetooth Control")
+st.title("ESP32 Bluetooth Health Monitor")
 ble_state = st.empty()
-retrieved_value = st.empty()
+bpm_value = st.empty()
+spo2_value = st.empty()
+temp_value = st.empty()
 ble_server = None
 
 async def connect_to_device():
@@ -40,52 +44,31 @@ async def connect_to_device():
         ble_state.error(f"Failed to connect: {e}")
         return
 
-    # Get the services
-    services = await ble_server.get_services()
-    ble_service_found = False
-    for service in services:
-        if service.uuid == BLE_SERVICE:
-            ble_service_found = True
-            global SENSOR_CHARACTERISTIC, LED_CHARACTERISTIC
-            SENSOR_CHARACTERISTIC = next(
-                (char.uuid for char in service.characteristics if char.uuid == SENSOR_CHARACTERISTIC), None
-            )
-            LED_CHARACTERISTIC = next(
-                (char.uuid for char in service.characteristics if char.uuid == LED_CHARACTERISTIC), None
-            )
-            break
-    
-    if not ble_service_found:
-        ble_state.error("BLE Service not found")
-        return
-
-    if not SENSOR_CHARACTERISTIC or not LED_CHARACTERISTIC:
-        ble_state.error("Required Characteristics not found")
-        return
-
 async def read_sensor_data():
     while True:
         if ble_server:
             try:
-                value = await ble_server.read_gatt_char(SENSOR_CHARACTERISTIC)
-                decoded_value = value.decode('utf-8')
-                retrieved_value.write(f"Retrieved Value: {decoded_value}")
+                bpm = await ble_server.read_gatt_char(BPM_CHARACTERISTIC)
+                spo2 = await ble_server.read_gatt_char(SPO2_CHARACTERISTIC)
+                temp = await ble_server.read_gatt_char(TEMP_CHARACTERISTIC)
+
+                decoded_bpm = int.from_bytes(bpm, byteorder='little')
+                decoded_spo2 = int.from_bytes(spo2, byteorder='little')
+                decoded_temp = struct.unpack('f', temp)[0] 
+
+                bpm_value.write(f"BPM: {decoded_bpm}")
+                spo2_value.write(f"SpO2: {decoded_spo2}")
+                temp_value.write(f"Temperature: {decoded_temp} °C")
             except asyncio.CancelledError:
-                retrieved_value.error("Read operation was cancelled.")
+                bpm_value.error("Read operation was cancelled.")
+                spo2_value.error("Read operation was cancelled.")
+                temp_value.error("Read operation was cancelled.")
                 break
             except Exception as e:
-                retrieved_value.error(f"Error reading data: {e}")
+                bpm_value.error(f"Error reading data: {e}")
+                spo2_value.error(f"Error reading data: {e}")
+                temp_value.error(f"Error reading data: {e}")
         await asyncio.sleep(1)
-
-async def control_led(state: bool):
-    if ble_server:
-        try:
-            # Convert the boolean state to byte value (0 or 1)
-            led_state = b'\x01' if state else b'\x00'
-            await ble_server.write_gatt_char(LED_CHARACTERISTIC, led_state)
-            st.write(f"LED {'on' if state else 'off'}")
-        except Exception as e:
-            st.error(f"Error controlling LED: {e}")
 
 if st.button("Connect to ESP32"):
     try:
@@ -94,9 +77,3 @@ if st.button("Connect to ESP32"):
             asyncio.run(read_sensor_data())
     except Exception as e:
         st.error(f"An error occurred: {e}")
-
-if st.button("Turn LED On"):
-    asyncio.run(control_led(True))
-
-if st.button("Turn LED Off"):
-    asyncio.run(control_led(False))
