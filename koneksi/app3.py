@@ -3,6 +3,9 @@ import asyncio
 from bleak import BleakClient, BleakScanner
 import time
 import struct
+import numpy as np
+from keras.models import load_model
+import pickle
 
 st.set_page_config(page_title='Health Monitoring', layout='wide', page_icon=':hospital:')
 
@@ -22,6 +25,7 @@ col1, col2, col3 = st.columns(3)
 bpm_placeholder = col1.empty()
 spo2_placeholder = col2.empty()
 temp_placeholder = col3.empty()
+health_placeholder = st.empty()
 
 # Create a placeholder for BLE state and button
 ble_state = st.empty()
@@ -31,13 +35,26 @@ button_placeholder = st.empty()
 bpm_value = 0
 spo2_value = 0
 temp_value = 0
+health_status = "-"
 ble_server = None
+
+#Initialize health prediction
+model_filename = 'health_status_model.h5'
+loaded_model = load_model(model_filename, compile=False)
+with open('scaler.pkl', 'rb') as f:
+    scaler = pickle.load(f)
 
 # Initialize session state
 if 'connected' not in st.session_state:
     st.session_state.connected = False
 if 'ble_status' not in st.session_state:
     st.session_state.ble_status = ""
+
+def predict_health_status(data):
+    scaled_data = scaler.transform(data)
+    predictions = loaded_model.predict(scaled_data)
+    pred_class = np.argmax(predictions, axis=1)
+    return pred_class[0]
 
 async def connect_to_device():
     global ble_server
@@ -65,7 +82,7 @@ async def connect_to_device():
         await ble_server.connect()
         st.session_state.ble_status = f"Connected to {device.name}"
         st.session_state.connected = True
-        ble_state.text(st.session_state.ble_status)
+        ble_state.text("")
         await read_sensor_data()  # Start reading sensor data after connection
         
     except Exception as e:
@@ -95,6 +112,11 @@ async def read_sensor_data():
                 spo2_placeholder.metric(label="SpO2", value=decoded_spo2)
                 temp_placeholder.metric(label="Temperature", value=decoded_temp)
                 
+                input_data = np.array([[decoded_bpm, decoded_temp, decoded_spo2]]).reshape(1, -1)
+                prediction = predict_health_status(input_data)
+                health_status = "Sehat" if prediction == 0 else "Sakit Ringan" if prediction == 1 else "Sakit Parah"
+                health_placeholder.metric(label="Tingkat Kesehatan", value=health_status)
+
             except Exception as e:
                 st.error(f"Error reading data: {e}")
         await asyncio.sleep(1)
