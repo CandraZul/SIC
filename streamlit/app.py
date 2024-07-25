@@ -60,9 +60,9 @@ temp_placeholder.metric(label="Temperature", value=st.session_state.avg_temp)
 health_placeholder.metric(label="Tingkat Kesehatan", value=st.session_state.health_status)
 
 # Initialize health prediction
-model_filename = 'health_status_model.h5'
+model_filename = 'streamlit/health_status_model.h5'
 loaded_model = load_model(model_filename, compile=False)
-with open('scaler.pkl', 'rb') as f:
+with open('streamlit/scaler.pkl', 'rb') as f:
     scaler = pickle.load(f)
 
 # Initialize session state
