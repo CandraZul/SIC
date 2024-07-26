@@ -3,7 +3,6 @@ keras==3.4.1
 numpy==1.24.2
 protobuf==5.27.2
 streamlit==1.36.0
-numpy==1.24.3
 tensorflow==2.17.0
 scikit-learn==1.5.1
 google-generativeai==0.7.2
