@@ -1,32 +1,23 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-# HTML + JavaScript code
-html_code = """
+# Membaca file CSS
+with open('static/styles.css', 'r') as css_file:
+    css_content = css_file.read()
+
+# Membaca file JavaScript
+with open('static/script.js', 'r') as js_file:
+    js_content = js_file.read()
+
+# HTML code with embedded CSS and JS
+html_code = f"""
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
     <title>Reca</title>
-    <style>
-        /* Add some basic styling */
-        body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-        }
-        .card-iot {
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 10px;
-            margin: 10px;
-            text-align: center;
-        }
-        .bg-radius {
-            border-radius: 5px;
-        }
-    </style>
+    <style>{css_content}</style>
 </head>
 <body>
     <header></header>
@@ -85,45 +76,10 @@ html_code = """
         </article>
     </main>
     <footer></footer>
-    <script>
-        function updateMetrics(bpm, spo2, temp) {
-            document.getElementById('bpm-value').textContent = bpm;
-            document.getElementById('spo2-value').textContent = spo2;
-            document.getElementById('temp-value').textContent = temp;
-            document.getElementById('bpm-span').textContent = bpm;
-            document.getElementById('spo2-span').textContent = spo2;
-            document.getElementById('temp-span').textContent = temp;
-        }
-
-        function submitForm() {
-            const gejala = document.getElementById('gejala-user').value;
-            // Send the gejala data to Streamlit via postMessage
-            window.parent.postMessage({ type: 'gejala', gejala: gejala }, '*');
-        }
-
-        window.addEventListener('message', function(event) {
-            if (event.data.type === 'updateMetrics') {
-                updateMetrics(event.data.bpm, event.data.spo2, event.data.temp);
-            }
-        });
-    </script>
+    <script>{js_content}</script>
 </body>
 </html>
 """
 
 # Display the HTML
-components.html(html_code, height=800)
-
-# Example of how to send data to the HTML
-def send_data_to_html(bpm, spo2, temp):
-    components.html(
-        f"""
-        <script>
-            window.postMessage({{type: 'updateMetrics', bpm: {bpm}, spo2: {spo2}, temp: {temp}}}, '*');
-        </script>
-        """,
-        height=0
-    )
-
-# Example data to send
-send_data_to_html(75, 98, 36.5)
+components.html(html_code, height=1000)
